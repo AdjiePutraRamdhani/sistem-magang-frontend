@@ -57,7 +57,7 @@ export default function Login() {
  
   return (
     <div style={styles.wrapper}>
-      <div style={styles.container}>
+       <div style={styles.container}>
         {/* Header */}
         <div style={styles.header}>
           <div style={styles.logo}>RIAU</div>

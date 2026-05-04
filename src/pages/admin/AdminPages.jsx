@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import DashboardLayout from '../../components/DashboardLayout'
 import api from '../../api/axios'
- 
+
 // Label badge status yang tampil di tabel
 const STATUS_LABEL = {
   menunggu_persetujuan: { text: 'Menunggu',  bg: '#FAEEDA', color: '#633806' },
@@ -10,7 +10,7 @@ const STATUS_LABEL = {
   aktif:                { text: 'Aktif',     bg: '#E6F1FB', color: '#0C447C' },
   selesai_dinilai:      { text: 'Selesai',   bg: '#F3E8FF', color: '#6B21A8' },
 }
- 
+
 function StatusBadge({ status }) {
   const s = STATUS_LABEL[status] || { text: status, bg: '#eee', color: '#333' }
   return (
@@ -20,7 +20,7 @@ function StatusBadge({ status }) {
     </span>
   )
 }
- 
+
 // Menu navigasi sidebar khusus Admin
 const MENU = [
   { path: '/admin/dashboard',    icon: '⊞', label: 'Dashboard' },
@@ -28,7 +28,7 @@ const MENU = [
   { path: '/admin/data',         icon: '👤', label: 'Kelola data magang' },
   { path: '/admin/pembimbing',   icon: '➕', label: 'Tambah pembimbing' },
 ]
- 
+
 // ================================================================
 // HALAMAN: Dashboard Utama
 // ================================================================
@@ -36,7 +36,7 @@ export function AdminDashboard() {
   const [stats, setStats]           = useState(null)
   const [pendaftaran, setPendaftaran] = useState([])
   const [loading, setLoading]       = useState(true)
- 
+
   useEffect(() => {
     Promise.all([
       api.get('/admin/dashboard'),
@@ -46,9 +46,9 @@ export function AdminDashboard() {
       setPendaftaran(pdRes.data.slice(0, 5)) // tampilkan 5 terbaru saja
     }).finally(() => setLoading(false))
   }, [])
- 
+
   if (loading) return <DashboardLayout menuItems={MENU} title="Dashboard"><p>Memuat...</p></DashboardLayout>
- 
+
   return (
     <DashboardLayout menuItems={MENU} title="Dashboard">
       {/* Kartu statistik */}
@@ -65,7 +65,7 @@ export function AdminDashboard() {
           </div>
         ))}
       </div>
- 
+
       {/* Tabel pendaftaran terbaru yang menunggu */}
       <div style={styles.panel}>
         <div style={styles.panelHead}>
@@ -80,7 +80,15 @@ export function AdminDashboard() {
     </DashboardLayout>
   )
 }
- 
+
+// Helper format tanggal: "2026-04-28T00:00:00Z" atau "2026-04-28" → "28 Apr 2026"
+function formatTanggal(str) {
+  if (!str) return '—'
+  const [y, m, d] = str.slice(0, 10).split('-')
+  const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des']
+  return `${parseInt(d)} ${bulan[parseInt(m) - 1]} ${y}`
+}
+
 // ================================================================
 // HALAMAN: Persetujuan Magang
 // ================================================================
@@ -94,7 +102,7 @@ export function AdminPersetujuan() {
   const [alasan, setAlasan]           = useState('')
   const [submitting, setSubmitting]   = useState(false)
   const [msg, setMsg]                 = useState('')
- 
+
   const load = useCallback(() => {
     setLoading(true)
     Promise.all([
@@ -105,9 +113,9 @@ export function AdminPersetujuan() {
       setPembimbing(pbRes.data)
     }).finally(() => setLoading(false))
   }, [])
- 
+
   useEffect(() => { load() }, [load])
- 
+
   const openModal = (item, type) => {
     setSelected(item)
     setModal(type)
@@ -115,9 +123,9 @@ export function AdminPersetujuan() {
     setAlasan('')
     setMsg('')
   }
- 
+
   const closeModal = () => { setModal(null); setSelected(null) }
- 
+
   const handleSetujui = async () => {
     if (!pembimbingId) { setMsg('Pilih pembimbing terlebih dahulu.'); return }
     setSubmitting(true)
@@ -129,7 +137,7 @@ export function AdminPersetujuan() {
       setMsg(e.response?.data?.message || 'Gagal menyetujui.')
     } finally { setSubmitting(false) }
   }
- 
+
   const handleTolak = async () => {
     if (!alasan.trim()) { setMsg('Alasan penolakan wajib diisi.'); return }
     setSubmitting(true)
@@ -141,7 +149,7 @@ export function AdminPersetujuan() {
       setMsg(e.response?.data?.message || 'Gagal menolak.')
     } finally { setSubmitting(false) }
   }
- 
+
   return (
     <DashboardLayout menuItems={MENU} title="Persetujuan Magang">
       {loading ? <p>Memuat...</p> : (
@@ -168,7 +176,7 @@ export function AdminPersetujuan() {
                     </td>
                     <td style={styles.td}>{item.asal_instansi}</td>
                     <td style={styles.td}>
-                      {item.tanggal_mulai} –<br />{item.tanggal_selesai}
+                      {formatTanggal(item.tanggal_mulai)} –<br />{formatTanggal(item.tanggal_selesai)}
                     </td>
                     <td style={styles.td}>{item.created_at?.slice(0,10)}</td>
                     <td style={styles.td}><StatusBadge status={item.status} /></td>
@@ -190,7 +198,7 @@ export function AdminPersetujuan() {
           </div>
         </div>
       )}
- 
+
       {/* Modal Setujui */}
       {modal === 'setujui' && (
         <Modal title={`Setujui pendaftaran — ${selected?.nama_lengkap}`} onClose={closeModal}>
@@ -215,7 +223,7 @@ export function AdminPersetujuan() {
           </div>
         </Modal>
       )}
- 
+
       {/* Modal Tolak */}
       {modal === 'tolak' && (
         <Modal title={`Tolak pendaftaran — ${selected?.nama_lengkap}`} onClose={closeModal}>
@@ -240,7 +248,7 @@ export function AdminPersetujuan() {
     </DashboardLayout>
   )
 }
- 
+
 // ================================================================
 // HALAMAN: Kelola Data Magang
 // ================================================================
@@ -250,16 +258,16 @@ export function AdminData() {
   const [loading, setLoading] = useState(true)
   const [deleteId, setDeleteId] = useState(null)
   const [msg, setMsg]       = useState('')
- 
+
   const load = useCallback(() => {
     setLoading(true)
     api.get(`/admin/mahasiswa?search=${search}`)
       .then(res => setData(res.data))
       .finally(() => setLoading(false))
   }, [search])
- 
+
   useEffect(() => { load() }, [load])
- 
+
   const handleDelete = async (id) => {
     try {
       await api.delete(`/admin/mahasiswa/${id}`)
@@ -269,7 +277,7 @@ export function AdminData() {
       setMsg(e.response?.data?.message || 'Gagal menghapus data.')
     }
   }
- 
+
   return (
     <DashboardLayout menuItems={MENU} title="Kelola Data Magang">
       <div style={styles.panel}>
@@ -303,7 +311,7 @@ export function AdminData() {
                       </td>
                       <td style={styles.td}>{item.asal_instansi}</td>
                       <td style={styles.td}>{item.pembimbing ?? <span style={{ color: '#aaa' }}>—</span>}</td>
-                      <td style={styles.td}>{item.tanggal_mulai} – {item.tanggal_selesai}</td>
+                      <td style={styles.td}>{formatTanggal(item.tanggal_mulai)} – {formatTanggal(item.tanggal_selesai)}</td>
                       <td style={styles.td}><StatusBadge status={item.status} /></td>
                       <td style={styles.td}>
                         <button style={styles.btnReject}
@@ -317,7 +325,7 @@ export function AdminData() {
           </div>
         )}
       </div>
- 
+
       {/* Konfirmasi hapus */}
       {deleteId && (
         <Modal title="Konfirmasi hapus data" onClose={() => setDeleteId(null)}>
@@ -333,11 +341,11 @@ export function AdminData() {
     </DashboardLayout>
   )
 }
- 
+
 // ================================================================
 // KOMPONEN PEMBANTU
 // ================================================================
- 
+
 // Komponen tabel sederhana yang dipakai di dashboard
 function Table({ data }) {
   return (
@@ -363,7 +371,7 @@ function Table({ data }) {
     </div>
   )
 }
- 
+
 // Komponen modal/popup
 function Modal({ title, children, onClose }) {
   return (
@@ -378,7 +386,7 @@ function Modal({ title, children, onClose }) {
     </div>
   )
 }
- 
+
 // ================================================================
 // STYLES
 // ================================================================
@@ -396,7 +404,7 @@ const styles = {
   thead: { background: '#F9FAFB' },
   th: { padding: '9px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '500', color: '#666', borderBottom: '1px solid #E5E7EB' },
   tr: { borderBottom: '1px solid #F3F4F6', cursor: 'default' },
-  td: { padding: '10px 16px', color: '#111', verticalAlign: 'middle' },
+  td: { padding: '10px 16px', color: '#111', verticalAlign: 'middle', textAlign: 'left' },
   meta: { fontSize: '11px', color: '#999' },
   btnGroup: { display: 'flex', gap: '6px' },
   btnApprove: { fontSize: '11px', padding: '4px 11px', borderRadius: '4px', cursor: 'pointer', background: '#EAF3DE', color: '#27500A', border: '1px solid #97C459', fontWeight: '500' },
@@ -412,4 +420,101 @@ const styles = {
   modalBody: { padding: '20px' },
   modalBtns: { display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' },
 }
- 
+
+// ================================================================
+// HALAMAN: Tambah Pembimbing (FIX BUG 5)
+// ================================================================
+export function AdminTambahPembimbing() {
+  const [form, setForm]         = useState({ nama_lengkap: '', email: '', password: '', nip: '', jabatan: '', bidang: '' })
+  const [errors, setErrors]     = useState({})
+  const [success, setSuccess]   = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null })
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setErrors({})
+    setSuccess('')
+    setSubmitting(true)
+    try {
+      await api.post('/admin/pembimbing', form)
+      setSuccess('Akun pembimbing berhasil dibuat.')
+      setForm({ nama_lengkap: '', email: '', password: '', nip: '', jabatan: '', bidang: '' })
+    } catch (err) {
+      if (err.response?.status === 422) {
+        setErrors(err.response.data.errors || {})
+      }
+    } finally { setSubmitting(false) }
+  }
+
+  const ErrorMsg = ({ field }) => errors[field]
+    ? <p style={{ fontSize: '12px', color: '#DC2626', margin: '4px 0 0' }}>{errors[field][0]}</p>
+    : null
+
+  return (
+    <DashboardLayout menuItems={MENU} title="Tambah Pembimbing">
+      <div style={{ maxWidth: '520px' }}>
+        <div style={styles.panel}>
+          <div style={{ fontSize: '13px', fontWeight: '600', color: '#111', marginBottom: '18px' }}>
+            Buat akun Pembimbing Instansi
+          </div>
+
+          {success && (
+            <div style={{ background: '#EAF3DE', color: '#27500A', padding: '10px 14px',
+              borderRadius: '6px', fontSize: '13px', marginBottom: '16px' }}>
+              ✅ {success}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '14px' }}>
+              <label style={styles.th}>Nama lengkap *</label>
+              <input name="nama_lengkap" value={form.nama_lengkap} onChange={handleChange}
+                style={styles.input} placeholder="Nama pembimbing" />
+              <ErrorMsg field="nama_lengkap" />
+            </div>
+            <div style={{ marginBottom: '14px' }}>
+              <label style={styles.th}>Email *</label>
+              <input name="email" type="email" value={form.email} onChange={handleChange}
+                style={styles.input} placeholder="email@dispusip.go.id" />
+              <ErrorMsg field="email" />
+            </div>
+            <div style={{ marginBottom: '14px' }}>
+              <label style={styles.th}>Password *</label>
+              <input name="password" type="password" value={form.password} onChange={handleChange}
+                style={styles.input} placeholder="Min. 8 karakter" />
+              <ErrorMsg field="password" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <div>
+                <label style={styles.th}>NIP</label>
+                <input name="nip" value={form.nip} onChange={handleChange}
+                  style={styles.input} placeholder="Nomor Induk Pegawai" />
+              </div>
+              <div>
+                <label style={styles.th}>Jabatan</label>
+                <input name="jabatan" value={form.jabatan} onChange={handleChange}
+                  style={styles.input} placeholder="Jabatan di instansi" />
+              </div>
+            </div>
+            <div style={{ marginBottom: '18px' }}>
+              <label style={styles.th}>Bidang / Divisi</label>
+              <input name="bidang" value={form.bidang} onChange={handleChange}
+                style={styles.input} placeholder="Bidang atau divisi" />
+            </div>
+            <button type="submit" disabled={submitting}
+              style={{ width: '100%', padding: '10px', background: '#0C447C', color: '#fff',
+                border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '500',
+                cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}>
+              {submitting ? 'Menyimpan...' : 'Buat akun pembimbing'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </DashboardLayout>
+  )
+}
