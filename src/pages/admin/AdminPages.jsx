@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import DashboardLayout from '../../components/DashboardLayout'
 import api from '../../api/axios'
 
 // Label badge status yang tampil di tabel
-const STATUS_LABEL = {
+/*const STATUS_LABEL = {
   menunggu_persetujuan: { text: 'Menunggu',  bg: '#FAEEDA', color: '#633806' },
   disetujui:            { text: 'Disetujui', bg: '#EAF3DE', color: '#27500A' },
   ditolak:              { text: 'Ditolak',   bg: '#FEE2E2', color: '#991B1B' },
@@ -19,7 +20,7 @@ function StatusBadge({ status }) {
       {s.text}
     </span>
   )
-}
+}*/
 
 // Menu navigasi sidebar khusus Admin
 const MENU = [
@@ -36,16 +37,36 @@ export function AdminDashboard() {
   const [stats, setStats]           = useState(null)
   const [pendaftaran, setPendaftaran] = useState([])
   const [loading, setLoading]       = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    Promise.all([
-      api.get('/admin/dashboard'),
-      api.get('/admin/pendaftaran?status=menunggu_persetujuan'),
-    ]).then(([statsRes, pdRes]) => {
-      setStats(statsRes.data)
-      setPendaftaran(pdRes.data.slice(0, 5)) // tampilkan 5 terbaru saja
-    }).finally(() => setLoading(false))
+    const fetchData = async () => {
+      try {
+        const [statsRes, pdRes] = await Promise.all([
+          api.get('/admin/dashboard'),
+          api.get('/admin/pendaftaran?status=menunggu_persetujuan'),
+        ])
+
+        setStats(statsRes.data)
+        setPendaftaran(pdRes.data.slice(0, 5))
+      } catch (err) {
+        console.error(err)
+        setError('Gagal memuat dashboard')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
   }, [])
+
+  if (error) {
+    return (
+    <DashboardLayout menuItems={MENU} title="Dashboard">
+      <p>{error}</p>
+    </DashboardLayout>
+    )
+  }
 
   if (loading) return <DashboardLayout menuItems={MENU} title="Dashboard"><p>Memuat...</p></DashboardLayout>
 
@@ -70,7 +91,7 @@ export function AdminDashboard() {
       <div style={styles.panel}>
         <div style={styles.panelHead}>
           <span style={styles.panelTitle}>Pendaftaran menunggu persetujuan</span>
-          <a href="/admin/persetujuan" style={styles.panelLink}>Lihat semua →</a>
+          <Link to="/admin/persetujuan" style={styles.panelLink}>Lihat semua →</Link>
         </div>
         {pendaftaran.length === 0
           ? <p style={styles.empty}>Tidak ada pendaftaran yang menunggu.</p>
