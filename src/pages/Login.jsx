@@ -31,6 +31,10 @@ export default function Login() {
   // lalu hanya mengubah field yang baru saja diketik.
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
+
+    if (error) {
+      setError('')
+    }
   }
  
   const handleSubmit = async (e) => {
@@ -39,6 +43,12 @@ export default function Login() {
     setError('')
     setLoading(true)
  
+    if (!form.email || !form.password) {
+      setError('Email dan password wajib diisi')
+      setLoading(false)
+      return
+    }
+
     try {
       const res = await api.post('/login', form)
       const { token, user } = res.data
@@ -81,8 +91,6 @@ export default function Login() {
       >
         {/* Header Section */}
         <div className="bg-[#1E3A5F] py-7 px-6 flex items-center gap-4 border-b border-white/10 relative overflow-hidden">
-          {/* Subtle background texture effect */}
-          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
           
           <div className="relative z-10 w-14 h-14 bg-white rounded-full flex items-center justify-center p-2 shadow-sm border border-gray-100">
              <img 
@@ -121,7 +129,9 @@ export default function Login() {
               >
                 <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-start gap-3">
                   <AlertCircle className="mt-0.5 flex-shrink-0" size={18} />
-                  <p className="text-sm font-medium leading-tight">{error}</p>
+                  <p className="text-sm font-medium leading-tight whitespace-pre-line">
+                    {error}
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -143,7 +153,7 @@ export default function Login() {
                   name="email"
                   value={form.email}
                   onChange={handleChange}
-                  placeholder="contoh@email.com"
+                  placeholder="Masukkan email"
                   className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg bg-[#F8F9FB] focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900"
                 />
               </div>
@@ -164,7 +174,7 @@ export default function Login() {
                   name="password"
                   value={form.password}
                   onChange={handleChange}
-                  placeholder="Masukan password"
+                  placeholder="Masukkan password"
                   className="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900"
                 />
                 <button
@@ -179,12 +189,17 @@ export default function Login() {
 
             {/* Login Button */}
             <motion.button
+              disabled={loading}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              className="w-full bg-[#1A73E8] hover:bg-[#1557B0] text-white py-3 px-4 rounded-full font-medium transition-colors shadow-md shadow-blue-500/20"
+              className={`w-full py-3 px-4 rounded-full font-medium transition-colors shadow-md shadow-blue-500/20 text-white
+              ${loading
+                ? 'bg-blue-400 cursor-not-allowed'
+                : 'bg-[#1A73E8] hover:bg-[#1557B0]'
+              }`}
             >
-              Masuk
+              {loading ? 'Memproses...' : 'Masuk'}
             </motion.button>
           </form>
 

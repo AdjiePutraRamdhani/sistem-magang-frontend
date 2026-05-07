@@ -1,5 +1,8 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { Eye, EyeOff, Loader2  } from 'lucide-react'
+
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
  
@@ -19,27 +22,79 @@ export default function Register() {
   // Contoh: { email: ['Email sudah digunakan.'], password: ['Min. 8 karakter.'] }
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
+  
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  
+  const [generalError, setGeneralError] = useState('')
+
   const { login } = useAuth()
   const navigate = useNavigate()
+
+  const inputClass = (field) => `
+    w-full px-4 py-2.5 bg-slate-50 border rounded-xl
+    focus:ring-2 focus:border-transparent outline-none
+    transition-all duration-200 hover:border-slate-300
+    disabled:opacity-70 disabled:cursor-not-allowed
+    ${
+      errors[field]
+        ? 'border-red-500 focus:ring-red-500'
+        : 'border-slate-200 focus:ring-blue-500'
+    }
+    `
+  const passwordValid =
+    /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(form.password)
+
+  const passwordMatch =
+    form.password_confirmation === '' ||
+    form.password === form.password_confirmation
  
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-    // Hapus error untuk field yang sedang diketik agar tidak mengganggu
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: null })
+    let { name, value } = e.target
+
+    if (name === 'no_telepon') {
+      value = value.replace(/\D/g, '')
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: null,
+      }))
+    }
+
+    if (generalError) {
+      setGeneralError('')
     }
   }
  
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
     setErrors({})
+    setGeneralError('')
     setLoading(true)
+
+    if (form.password !== form.password_confirmation) {
+      setErrors({
+        password_confirmation: ['Konfirmasi password tidak cocok.'],
+      })
+      setLoading(false)
+      return
+    }
  
     try {
       const res = await api.post('/register', form)
       const { token, user } = res.data
  
       login(token, user)
+      setShowPassword(false)
+      setShowConfirmPassword(false)
       navigate('/mahasiswa/dashboard')
  
     } catch (err) {
@@ -48,6 +103,8 @@ export default function Register() {
       // di bawah masing-masing input yang bermasalah.
       if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {})
+      } else {
+        setGeneralError('Terjadi kesalahan. Silakan coba lagi.')
       }
     } finally {
       setLoading(false)
@@ -56,159 +113,352 @@ export default function Register() {
  
   // Helper untuk menampilkan pesan error di bawah input tertentu
   const ErrorMsg = ({ field }) =>
-    errors[field] ? (
-      <p style={styles.errorText}>{errors[field][0]}</p>
-    ) : null
+  errors[field] ? (
+    <p className="text-xs text-red-500 mt-1">
+      {errors[field][0]}
+    </p>
+  ) : null
  
   return (
-    <div style={styles.wrapper}>
-      <div style={styles.container}>
-        {/* Header */}
-        <div style={styles.header}>
-          <div style={styles.logo}>RIAU</div>
-          <div>
-            <p style={styles.headerTitle}>Sistem Informasi Pendataan Magang</p>
-            <p style={styles.headerSub}>Dinas Perpustakaan dan Kearsipan Provinsi Riau</p>
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 md:p-8 font-sans">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-2xl bg-white rounded-3xl shadow-xl overflow-hidden"
+      >
+
+        {/* HEADER */}
+        <div className="bg-[#1E3A5F] p-6 md:p-8 text-white flex items-center gap-4">
+          
+          
+          <div className="relative z-10 w-14 h-14 bg-white rounded-full flex items-center justify-center p-2 shadow-sm border border-gray-100">
+             <img 
+               src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Coat_of_arms_of_Riau.svg/512px-Coat_of_arms_of_Riau.svg.png" 
+               alt="Logo Riau" 
+               className="w-full h-full object-contain"
+               referrerPolicy="no-referrer"
+             />
+          </div>
+
+          <div className="border-l border-white/30 pl-4 h-12 flex flex-col justify-center">
+            <h1 className="text-lg md:text-xl font-bold leading-tight">
+              Sistem Informasi Pendataan Magang
+            </h1>
+
+            <p className="text-xs md:text-sm opacity-90 text-blue-50/80 uppercase tracking-wide">
+              Dinas Perpustakaan dan Kearsipan Provinsi Riau
+            </p>
           </div>
         </div>
- 
-        {/* Form */}
-        <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Buat akun baru</h2>
-          <p style={styles.cardSub}>Khusus untuk Mahasiswa/Siswa Magang</p>
- 
-          <form onSubmit={handleSubmit}>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Nama lengkap <span style={styles.req}>*</span></label>
-              <input style={styles.input} type="text" name="nama_lengkap"
-                placeholder="Nama sesuai KTP/KTM" value={form.nama_lengkap}
-                onChange={handleChange} required />
-              <ErrorMsg field="nama_lengkap" />
-            </div>
- 
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Email <span style={styles.req}>*</span></label>
-              <input style={styles.input} type="email" name="email"
-                placeholder="contoh@email.com" value={form.email}
-                onChange={handleChange} required />
-              <ErrorMsg field="email" />
-            </div>
- 
-            {/* Dua input dalam satu baris */}
-            <div style={styles.formRow}>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>No. telepon</label>
-                <input style={styles.input} type="text" name="no_telepon"
-                  placeholder="08xxxxxxxxxx" value={form.no_telepon}
-                  onChange={handleChange} />
-                <ErrorMsg field="no_telepon" />
+
+        {/* FORM */}
+        <div className="p-6 md:p-10">
+
+          {/* TITLE */}
+          <div className="mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-800">
+              Buat akun baru
+            </h2>
+
+            <p className="text-slate-500 mt-1">
+              Khusus untuk Mahasiswa/Siswa Magang
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-8">
+
+            {/* PERSONAL INFO */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
+                Personal Info
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* NAMA */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-1.5">
+                    Nama lengkap <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    disabled={loading}
+                    autoFocus
+                    type="text"
+                    name="nama_lengkap"
+                    autoComplete="name"
+                    required
+                    placeholder="Nama sesuai KTP/KTM"
+                    value={form.nama_lengkap}
+                    onChange={handleChange}
+                    className={inputClass('nama_lengkap')}
+                  />
+
+                  <ErrorMsg field="nama_lengkap" />
+                </div>
+
+                {/* EMAIL */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-1.5">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    disabled={loading}
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    required
+                    placeholder="contoh@email.com"
+                    value={form.email}
+                    onChange={handleChange}
+                    className={inputClass('email')}
+                  />
+
+                  <ErrorMsg field="email" />
+                </div>
+
+                {/* TELEPON */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-2">
+                    No. Telepon <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    disabled={loading}
+                    type="text"
+                    inputMode="numeric"
+                    name="no_telepon"
+                    maxLength={15}
+                    autoComplete="tel"
+                    placeholder="08xxxxxxxxxx"
+                    value={form.no_telepon}
+                    onChange={handleChange}
+                    className={inputClass('no_telepon')}
+                  />
+
+                  <ErrorMsg field="no_telepon" />
+                </div>
+
+                {/* NIM */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1.5">
+                    NIM / NISN <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    disabled={loading}
+                    type="text"
+                    name="nim_nisn"
+                    placeholder="NIM atau NISN"
+                    value={form.nim_nisn}
+                    onChange={handleChange}
+                    className={inputClass('nim_nisn')}
+                  />
+
+                  <ErrorMsg field="nim_nisn" />
+                </div>
               </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>NIM / NISN</label>
-                <input style={styles.input} type="text" name="nim_nisn"
-                  placeholder="NIM atau NISN" value={form.nim_nisn}
-                  onChange={handleChange} />
-                <ErrorMsg field="nim_nisn" />
+            </div>
+
+            {/* AKADEMIK */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
+                Academic Details
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* INSTANSI */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-1.5">
+                    Asal instansi / kampus <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    disabled={loading}
+                    type="text"
+                    name="asal_instansi"
+                    required
+                    autoComplete="organization"
+                    placeholder="Universitas / Sekolah"
+                    value={form.asal_instansi}
+                    onChange={handleChange}
+                    className={inputClass('asal_instansi')}
+                  />
+
+                  <ErrorMsg field="asal_instansi" />
+                </div>
+
+                {/* PRODI */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1.5">
+                    Program studi / jurusan <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    disabled={loading}
+                    type="text"
+                    name="program_studi"
+                    placeholder="Program studi"
+                    value={form.program_studi}
+                    onChange={handleChange}
+                    className={inputClass('program_studi')}
+                  />
+
+                  <ErrorMsg field="program_studi" />
+                </div>
               </div>
             </div>
- 
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Asal instansi / kampus <span style={styles.req}>*</span></label>
-              <input style={styles.input} type="text" name="asal_instansi"
-                placeholder="Universitas / Sekolah" value={form.asal_instansi}
-                onChange={handleChange} required />
-              <ErrorMsg field="asal_instansi" />
-            </div>
- 
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Program studi / jurusan</label>
-              <input style={styles.input} type="text" name="program_studi"
-                placeholder="Program studi" value={form.program_studi}
-                onChange={handleChange} />
-              <ErrorMsg field="program_studi" />
-            </div>
- 
-            <div style={styles.formRow}>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Password <span style={styles.req}>*</span></label>
-                <input style={styles.input} type="password" name="password"
-                  placeholder="Min. 8 karakter" value={form.password}
-                  onChange={handleChange} required />
-                <ErrorMsg field="password" />
+
+            {/* PASSWORD */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
+                Security
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* PASSWORD */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-1.5">
+                    Password <span className="text-red-500">*</span>
+                  </label>
+
+                  <div className="relative">
+                    <input
+                      disabled={loading}
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      autoComplete="new-password"
+                      required
+                      placeholder="Min. 8 karakter"
+                      value={form.password}
+                      onChange={handleChange}
+                      className={inputClass('password')}
+                    />
+
+                    <button
+                      type="button"
+                      disabled={loading}
+                      aria-label="Toggle password visibility"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 
+                      text-slate-400 hover:text-slate-600
+                      transition-colors
+                      disabled:cursor-not-allowed"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+
+                  <p
+                    className={`text-[11px] mt-1 font-medium ${
+                      passwordValid ? 'text-green-600' : 'text-red-500'
+                    }`}
+                  >
+                    Password minimal 8 karakter, kombinasi huruf dan angka
+                  </p>
+
+                  <ErrorMsg field="password" />
+                </div>
+
+                {/* KONFIRMASI PASSWORD */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-1.5">
+                    Konfirmasi password <span className="text-red-500">*</span>
+                  </label>
+
+                  <div className="relative">
+                    <input
+                      disabled={loading}
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      name="password_confirmation"
+                      required
+                      placeholder="Ulangi password"
+                      value={form.password_confirmation}
+                      onChange={handleChange}
+                      className={inputClass('password_confirmation')}
+                    />
+
+                    <button
+                      type="button"
+                      disabled={loading}
+                      aria-label="Toggle password visibility"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 
+                      text-slate-400 hover:text-slate-600
+                      transition-colors
+                      disabled:cursor-not-allowed"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff size={18} />
+                      ) : (
+                        <Eye size={18} />
+                      )}
+                    </button>
+                  </div>
+                  {form.password_confirmation && (
+                    <p
+                      className={`text-[11px] mt-1 font-medium ${
+                        passwordMatch ? 'text-green-600' : 'text-red-500'
+                      }`}
+                    >
+                      {passwordMatch
+                        ? 'Konfirmasi password cocok'
+                        : 'Konfirmasi password tidak cocok'}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Konfirmasi password <span style={styles.req}>*</span></label>
-                <input style={styles.input} type="password" name="password_confirmation"
-                  placeholder="Ulangi password" value={form.password_confirmation}
-                  onChange={handleChange} required />
-              </div>
             </div>
- 
-            <p style={styles.hint}>Password minimal 8 karakter, kombinasi huruf dan angka</p>
- 
-            <button
-              type="submit"
-              style={{ ...styles.btnPrimary, opacity: loading ? 0.7 : 1 }}
-              disabled={loading}
-            >
-              {loading ? 'Memproses...' : 'Daftar'}
-            </button>
+
+            {/* BUTTON */}
+            <div className="pt-4 space-y-4">
+              {generalError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">
+                  {generalError}
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={ loading || !passwordValid || !passwordMatch }
+                className={`w-full text-white font-bold py-3.5 rounded-xl shadow-lg
+                active:scale-[0.98] transition-all text-sm uppercase tracking-wider
+                disabled:opacity-80 disabled:cursor-not-allowed
+                ${
+                  loading
+                    ? 'bg-blue-400 cursor-wait'
+                    : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'
+                }`}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="animate-spin" size={18} />
+                    Memproses...
+                  </span>
+                ) : (
+                    'Daftar'
+                  )}
+              </button>
+
+              <p className="text-center text-sm text-slate-600">
+                Sudah punya akun?{' '}
+                <Link
+                  to="/login"
+                  className="font-bold text-blue-600 hover:underline"
+                >
+                  Masuk di sini
+                </Link>
+              </p>
+            </div>
+
           </form>
- 
-          <p style={styles.footerNote}>
-            Sudah punya akun?{' '}
-            <Link to="/login" style={styles.link}>Masuk di sini</Link>
-          </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
- 
-const styles = {
-  wrapper: {
-    minHeight: '100vh', background: '#F0F4F8',
-    display: 'flex', alignItems: 'center',
-    justifyContent: 'center', padding: '20px',
-  },
-  container: { width: '100%', maxWidth: '480px' },
-  header: {
-    background: '#0C447C', padding: '16px 20px',
-    borderRadius: '10px 10px 0 0',
-    display: 'flex', alignItems: 'center', gap: '14px',
-  },
-  logo: {
-    width: '40px', height: '40px', background: '#fff',
-    borderRadius: '50%', display: 'flex', alignItems: 'center',
-    justifyContent: 'center', fontSize: '10px', fontWeight: '600',
-    color: '#0C447C', flexShrink: 0,
-  },
-  headerTitle: { margin: 0, color: '#fff', fontSize: '13px', fontWeight: '500' },
-  headerSub: { margin: '2px 0 0', color: 'rgba(255,255,255,0.7)', fontSize: '11px' },
-  card: {
-    background: '#fff', borderRadius: '0 0 10px 10px',
-    padding: '28px 28px 32px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-  },
-  cardTitle: { margin: '0 0 4px', fontSize: '18px', fontWeight: '600', color: '#1a1a1a' },
-  cardSub: { margin: '0 0 20px', fontSize: '13px', color: '#666' },
-  formGroup: { marginBottom: '14px', flex: 1 },
-  formRow: { display: 'flex', gap: '12px' },
-  label: { display: 'block', fontSize: '12px', fontWeight: '500', color: '#444', marginBottom: '5px' },
-  req: { color: '#E24B4A' },
-  input: {
-    width: '100%', padding: '8px 11px', fontSize: '13px',
-    border: '1px solid #D1D5DB', borderRadius: '6px',
-    boxSizing: 'border-box', outline: 'none', color: '#1a1a1a',
-  },
-  errorText: { margin: '4px 0 0', fontSize: '12px', color: '#DC2626' },
-  hint: { fontSize: '11px', color: '#999', margin: '-8px 0 14px' },
-  btnPrimary: {
-    width: '100%', padding: '10px', background: '#0C447C',
-    color: '#fff', border: 'none', borderRadius: '6px',
-    fontSize: '13px', fontWeight: '500', cursor: 'pointer', marginTop: '4px',
-  },
-  link: { color: '#185FA5', textDecoration: 'underline' },
-  footerNote: { fontSize: '13px', textAlign: 'center', marginTop: '16px', marginBottom: 0, color: '#555' },
-}
- 
