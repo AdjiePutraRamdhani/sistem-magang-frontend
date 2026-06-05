@@ -28,7 +28,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   // 'replace' berarti halaman ini tidak masuk ke history browser,
   // sehingga tombol "back" tidak akan kembali ke halaman yang dilindungi.
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/home" replace />
   }
  
   // Jika role user tidak termasuk dalam daftar yang diizinkan,

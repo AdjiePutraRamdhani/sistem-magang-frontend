@@ -18,7 +18,7 @@ export default function Sidebar({ menuItems = [] }) {
       console.error(err)
     } finally {
       logout()
-      navigate('/login')
+      navigate('/home')
     }
   }
 
