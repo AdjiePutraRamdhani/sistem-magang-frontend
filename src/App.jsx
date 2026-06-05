@@ -9,6 +9,7 @@ import { AuthProvider } from './context/AuthContext'
 
 import ProtectedRoute from './components/ProtectedRoute'
 
+import LandingPageView from './pages/LandingPageView'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
@@ -41,6 +42,11 @@ export default function App() {
         <Routes>
 
           {/* PUBLIC */}
+          <Route
+            path="/home"
+            element={<LandingPageView />}
+          />
+
           <Route
             path="/login"
             element={<Login />}

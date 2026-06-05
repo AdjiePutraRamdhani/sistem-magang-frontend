@@ -104,7 +104,7 @@ export default function Login() {
             <img
               src={logoRiau}
               alt="Logo"
-              className="w-24 h-24 mb-6"
+              className="w-24 h-24 object-contain mb-6"
             />
 
             <h1 className="text-5xl font-bold leading-tight">
