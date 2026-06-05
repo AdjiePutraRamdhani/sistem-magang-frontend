@@ -5,6 +5,11 @@ export const getDashboard = async () => {
   return res.data
 }
 
+export const getMahasiswa = async () => {
+  const { data } = await api.get('/admin/mahasiswa')
+  return data
+}
+
 export const getPendingPendaftaran = async () => {
   const res = await api.get(
     '/admin/pendaftaran?status=menunggu_persetujuan'
@@ -34,6 +39,8 @@ export const rejectPendaftaran = async (
 ) => {
   return api.post(
     `/admin/pendaftaran/${id}/tolak`,
-    { alasan_tolak: alasan }
+    {
+      alasan_tolak: alasan,
+    }
   )
 }

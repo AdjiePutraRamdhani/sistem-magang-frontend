@@ -1,167 +1,400 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
-import DashboardLayout from '../../components/DashboardLayout'
-import api from '../../api/axios'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ADMIN_MENU } from '../../constants/adminMenu'
-import { formatTanggal } from '../../utils/formatTanggal'
-import { styles } from '../../styles/adminStyles'
+import { approvePendaftaran, rejectPendaftaran, } from '@/services/adminServices'
+import { useState, useEffect } from 'react'
+import api from '@/api/axios'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import useDashboard from '../../hooks/useDashboard'
+import Loading from '@/components/common/Loading'
+import DashboardTable from '../../components/dashboard/DashboardTable'
+import PageHeader from '../../components/common/PageHeader'
+import Card from '../../components/ui/Card'
+import usePersetujuan from '../../hooks/usePersetujuan'
+import ErrorState from '@/components/common/ErrorState'
+import EmptyDashboard from '../../components/dashboard/EmptyDashboard'
+import EmptyState from '@/components/common/EmptyState'
+import Modal from '../../components/modal/Modal'
 
-// ================================================================
-// HALAMAN: Persetujuan Magang
-// ================================================================
-export function AdminPersetujuan() {
-  const [data, setData]               = useState([])
-  const [pembimbing, setPembimbing]   = useState([])
-  const [loading, setLoading]         = useState(true)
-  const [selected, setSelected]       = useState(null)   // pendaftaran yang dipilih
-  const [modal, setModal]             = useState(null)   // 'setujui' | 'tolak'
-  const [pembimbingId, setPembimbingId] = useState('')
-  const [alasan, setAlasan]           = useState('')
-  const [submitting, setSubmitting]   = useState(false)
-  const [msg, setMsg]                 = useState('')
 
-  const load = useCallback(() => {
-    setLoading(true)
-    Promise.all([
-      api.get('/admin/pendaftaran'),
-      api.get('/admin/pembimbing'),
-    ]).then(([pdRes, pbRes]) => {
-      setData(pdRes.data)
-      setPembimbing(pbRes.data)
-    }).finally(() => setLoading(false))
+export default function AdminPersetujuan() {
+  const [selectedId, setSelectedId] = useState(null)
+  const [selectedPembimbing, setSelectedPembimbing] = useState('')
+  const [showApproveModal, setShowApproveModal] = useState(false)
+  const [showPdfModal, setShowPdfModal] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState('')
+  const [pembimbingList, setPembimbingList] = useState([])
+
+  const handleViewSurat = (url) => {
+  console.log('PDF URL:', url)
+
+  setPdfUrl(url)
+  setShowPdfModal(true)
+}
+
+  const fetchPembimbing = async () => {
+    try {
+      const res = await api.get('/admin/pembimbing')
+
+      setPembimbingList(res.data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  useEffect(() => {
+    fetchPembimbing()
   }, [])
 
-  useEffect(() => { load() }, [load])
+  const handleApprove = async () => {
+  try {
+    await api.post(
+      `/admin/pendaftaran/${selectedId}/setujui`,
+      {
+        pembimbing_id: selectedPembimbing,
+      }
+    )
 
-  const openModal = (item, type) => {
-    setSelected(item)
-    setModal(type)
-    setPembimbingId('')
-    setAlasan('')
-    setMsg('')
+    setPendaftaran((prev) =>
+      prev.filter((item) => item.id !== selectedId)
+    )
+
+    setShowApproveModal(false)
+
+    setSelectedId(null)
+    setSelectedPembimbing('')
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
+  const [rejectError, setRejectError] = useState('')
+
+  const handleReject = async () => {
+    try {
+      await rejectPendaftaran(
+        selectedId,
+        rejectReason
+      )
+
+      setPendaftaran((prev) =>
+        prev.filter((item) => item.id !== selectedId)
+      )
+
+      setShowRejectModal(false)
+
+      setSelectedId(null)
+      setRejectReason('')
+    } catch (err) {
+        console.log(err.response.data)
+
+      alert('Gagal menolak pendaftaran')
+    }
+  }
+  
+  const {
+    pendaftaran: initialData,
+    loading,
+    error,
+  } = usePersetujuan()
+
+  const [pendaftaran, setPendaftaran] = useState([])  
+
+  useEffect(() => {
+    setPendaftaran(initialData)
+  }, [initialData])
+
+  if (loading) {
+    return (
+      <DashboardLayout menuItems={ADMIN_MENU}>
+        <Loading />
+      </DashboardLayout>
+    )
   }
 
-  const closeModal = () => { setModal(null); setSelected(null) }
-
-  const handleSetujui = async () => {
-    if (!pembimbingId) { setMsg('Pilih pembimbing terlebih dahulu.'); return }
-    setSubmitting(true)
-    try {
-      await api.post(`/admin/pendaftaran/${selected.id}/setujui`, { pembimbing_id: pembimbingId })
-      closeModal()
-      load()
-    } catch (e) {
-      setMsg(e.response?.data?.message || 'Gagal menyetujui.')
-    } finally { setSubmitting(false) }
-  }
-
-  const handleTolak = async () => {
-    if (!alasan.trim()) { setMsg('Alasan penolakan wajib diisi.'); return }
-    setSubmitting(true)
-    try {
-      await api.post(`/admin/pendaftaran/${selected.id}/tolak`, { alasan_tolak: alasan })
-      closeModal()
-      load()
-    } catch (e) {
-      setMsg(e.response?.data?.message || 'Gagal menolak.')
-    } finally { setSubmitting(false) }
+  if (error) {
+    return (
+      <DashboardLayout menuItems={ADMIN_MENU}>
+        <ErrorState message={error} />
+      </DashboardLayout>
+    )
   }
 
   return (
-    <DashboardLayout menuItems={ADMIN_MENU} title="Persetujuan Magang">
-      {loading ? <p>Memuat...</p> : (
-        <div style={styles.panel}>
-          <div style={styles.panelHead}>
-            <span style={styles.panelTitle}>Daftar pendaftaran masuk</span>
-            <span style={{ fontSize: '12px', color: '#999' }}>{data.length} entri</span>
+    <DashboardLayout menuItems={ADMIN_MENU}>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className="space-y-8"
+      >
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          className="
+            relative overflow-hidden
+            rounded-3xl
+            bg-gradient-to-br
+            from-slate-900
+            via-blue-900
+            to-indigo-900
+            p-8 md:p-10
+            text-white
+          "
+        >
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full" />
+            <div className="absolute bottom-0 left-0 w-52 h-52 bg-white rounded-full" />
           </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={styles.table}>
-              <thead>
-                <tr style={styles.thead}>
-                  {['Nama peserta','Asal instansi','Periode','Tgl. daftar','Status','Aksi'].map(h => (
-                    <th key={h} style={styles.th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {data.map(item => (
-                  <tr key={item.id} style={styles.tr}>
-                    <td style={styles.td}>
-                      <strong>{item.nama_lengkap}</strong>
-                      <br /><span style={styles.meta}>{item.program_studi}</span>
-                    </td>
-                    <td style={styles.td}>{item.asal_instansi}</td>
-                    <td style={styles.td}>
-                      {formatTanggal(item.tanggal_mulai)} –<br />{formatTanggal(item.tanggal_selesai)}
-                    </td>
-                    <td style={styles.td}>{item.created_at?.slice(0,10)}</td>
-                    <td style={styles.td}><StatusBadge status={item.status} /></td>
-                    <td style={styles.td}>
-                      <div style={styles.btnGroup}>
-                        {item.status === 'menunggu_persetujuan' && (<>
-                          <button style={styles.btnApprove} onClick={() => openModal(item, 'setujui')}>Setujui</button>
-                          <button style={styles.btnReject}  onClick={() => openModal(item, 'tolak')}>Tolak</button>
-                        </>)}
-                        {item.status !== 'menunggu_persetujuan' && (
-                          <span style={{ fontSize: '11px', color: '#aaa' }}>Sudah diproses</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
-      {/* Modal Setujui */}
-      {modal === 'setujui' && (
-        <Modal title={`Setujui pendaftaran — ${selected?.nama_lengkap}`} onClose={closeModal}>
-          <p style={{ fontSize: '13px', color: '#555', marginBottom: '14px' }}>
-            Pilih pembimbing yang akan ditugaskan untuk peserta ini:
+          <div className="relative z-10">
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-3xl md:text-4xl font-bold"
+            >
+              Persetujuan Magang 📜
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="
+                mt-4
+                text-blue-100
+                max-w-2xl
+                leading-relaxed
+              "
+            >
+              Daftar pendaftaran yang menunggu persetujuan.
+            </motion.p>
+          </div>
+        </motion.div>
+
+        <Card>
+          {pendaftaran.length === 0 ? (
+            <EmptyState
+              title="Belum ada pendaftaran"
+              description="Data persetujuan akan muncul di sini."
+            />
+          ) : (
+            <DashboardTable
+              data={pendaftaran}
+              onView={(url) => {
+                handleViewSurat(url)
+              }}
+                onApprove={(id) => {
+                setSelectedId(id)
+                setShowApproveModal(true)
+              }}
+              onReject={(id) => {
+                setSelectedId(id)
+                setShowRejectModal(true)
+              }}
+              showActions
+            />
+          )}
+        </Card>
+      </motion.div>
+      
+      <Modal
+        isOpen={showApproveModal}
+        onClose={() => setShowApproveModal(false)}
+      >
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5">
+          <h2 className="text-xl font-bold text-white">
+            Pilih Pembimbing
+          </h2>
+
+          <p className="text-blue-100 text-sm">
+            Tentukan pembimbing mahasiswa
           </p>
-          <select style={styles.input} value={pembimbingId}
-            onChange={e => setPembimbingId(e.target.value)}>
-            <option value="">-- Pilih pembimbing --</option>
-            {pembimbing.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.nama_lengkap} {p.jabatan ? `(${p.jabatan})` : ''}
+        </div>
+
+        <div className="p-6">
+          <select
+            value={selectedPembimbing}
+            onChange={(e) =>
+              setSelectedPembimbing(e.target.value)
+            }
+            className="
+              w-full rounded-xl border
+              px-4 py-3
+              focus:ring-4 focus:ring-blue-100
+              focus:border-blue-500
+            "
+          >
+            <option value="">Pilih pembimbing</option>
+
+            {pembimbingList.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.nama_lengkap}
               </option>
             ))}
           </select>
-          {msg && <p style={styles.errText}>{msg}</p>}
-          <div style={styles.modalBtns}>
-            <button style={styles.btnSecondary} onClick={closeModal}>Batal</button>
-            <button style={styles.btnApprove} onClick={handleSetujui} disabled={submitting}>
-              {submitting ? 'Memproses...' : 'Setujui'}
-            </button>
-          </div>
-        </Modal>
-      )}
 
-      {/* Modal Tolak */}
-      {modal === 'tolak' && (
-        <Modal title={`Tolak pendaftaran — ${selected?.nama_lengkap}`} onClose={closeModal}>
-          <p style={{ fontSize: '13px', color: '#555', marginBottom: '10px' }}>
-            Berikan alasan penolakan yang jelas agar peserta dapat memperbaiki pengajuannya:
-          </p>
-          <textarea
-            style={{ ...styles.input, minHeight: '90px', resize: 'vertical' }}
-            placeholder="Tuliskan alasan penolakan..."
-            value={alasan}
-            onChange={e => setAlasan(e.target.value)}
-          />
-          {msg && <p style={styles.errText}>{msg}</p>}
-          <div style={styles.modalBtns}>
-            <button style={styles.btnSecondary} onClick={closeModal}>Batal</button>
-            <button style={styles.btnReject} onClick={handleTolak} disabled={submitting}>
-              {submitting ? 'Memproses...' : 'Tolak'}
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              onClick={() => setShowApproveModal(false)}
+              className="
+                px-5 py-2.5
+                rounded-xl
+                border
+                hover:bg-gray-50
+              "
+            >
+              Batal
+            </button>
+
+            <button
+              onClick={handleApprove}
+              className="
+                px-5 py-2.5
+                rounded-xl
+                bg-blue-600 text-white
+                hover:bg-blue-700
+                shadow-lg shadow-blue-500/20
+              "
+            >
+              Setujui
             </button>
           </div>
-        </Modal>
-      )}
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showRejectModal}
+        onClose={() => setShowRejectModal(false)}
+      >
+        <div className="bg-gradient-to-r from-red-600 to-rose-600 px-6 py-5">
+          <h2 className="text-xl font-bold text-white">
+            Tolak Pengajuan
+          </h2>
+
+          <p className="text-red-100 text-sm">
+            Berikan alasan penolakan
+          </p>
+        </div>
+
+        <div className="p-6">
+          <textarea
+            value={rejectReason}
+            onChange={(e) =>
+              setRejectReason(e.target.value)
+            }
+            rows={5}
+            placeholder="Masukkan alasan penolakan..."
+            className="
+              w-full rounded-xl border
+              px-4 py-3
+              resize-none
+              focus:ring-4 focus:ring-red-100
+              focus:border-red-500
+            "
+          />
+
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              onClick={() => {
+                setShowRejectModal(false)
+                setRejectReason('')
+              }}
+              className="
+                px-5 py-2.5
+                rounded-xl border
+                hover:bg-gray-50
+              "
+            >
+              Batal
+            </button>
+
+            <button
+              onClick={handleReject}
+              className="
+                px-5 py-2.5
+                rounded-xl
+                bg-red-600 text-white
+                hover:bg-red-700
+                shadow-lg shadow-red-500/20
+              "
+            >
+              Tolak
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <AnimatePresence>
+        {showPdfModal && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPdfModal(false)}
+            />
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 100,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+                y: 100,
+              }}
+              transition={{
+                duration: 0.25,
+              }}
+              className="
+                fixed inset-4 z-50
+                bg-white rounded-3xl
+                shadow-2xl overflow-hidden
+                flex flex-col
+              "
+            >
+              <div className="flex items-center justify-between p-5 border-b">
+                <div>
+                  <h2 className="text-xl font-bold">
+                    Surat Pengantar Magang
+                  </h2>
+
+                  <p className="text-sm text-gray-500">
+                    Preview dokumen
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowPdfModal(false)}
+                  className="
+                    w-10 h-10
+                    rounded-full
+                    hover:bg-gray-100
+                  "
+                >
+                  ✕
+                </button>
+              </div>
+
+              <iframe
+                src={pdfUrl}
+                title="Preview PDF"
+                className="flex-1 w-full"
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+        
     </DashboardLayout>
   )
 }

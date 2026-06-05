@@ -1,47 +1,82 @@
-import { styles } from '../../styles/adminStyles'
+import { motion } from 'framer-motion'
+import {
+  Users,
+  UserPlus,
+  LayoutDashboard,
+  CheckSquare,
+  Loader2,
+} from 'lucide-react'
+
+import Card from '../ui/Card'
+
+const statsConfig = [
+  {
+    key: 'total_peserta',
+    label: 'Total Peserta Magang',
+    icon: Users,
+    color: 'bg-blue-600',
+  },
+  {
+    key: 'menunggu',
+    label: 'Menunggu Persetujuan',
+    icon: UserPlus,
+    color: 'bg-amber-500',
+  },
+  {
+    key: 'aktif',
+    label: 'Sedang Aktif Magang',
+    icon: LayoutDashboard,
+    color: 'bg-emerald-500',
+  },
+  {
+    key: 'selesai_dinilai',
+    label: 'Selesai & Dinilai',
+    icon: CheckSquare,
+    color: 'bg-violet-600',
+  },
+]
 
 export default function StatsGrid({ stats }) {
-  const items = [
-    {
-      label: 'Total peserta magang',
-      value: stats?.total_peserta ?? 0,
-      color: '#111',
-    },
-    {
-      label: 'Menunggu persetujuan',
-      value: stats?.menunggu ?? 0,
-      color: '#BA7517',
-    },
-    {
-      label: 'Sedang aktif magang',
-      value: stats?.aktif ?? 0,
-      color: '#185FA5',
-    },
-    {
-      label: 'Selesai & dinilai',
-      value: stats?.selesai_dinilai ?? 0,
-      color: '#3B6D11',
-    },
-  ]
-
   return (
-    <div style={styles.statGrid}>
-      {items.map((s) => (
-        <div key={s.label} style={styles.statCard}>
-          <div style={styles.statLabel}>
-            {s.label}
-          </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      {statsConfig.map((item, index) => {
+        const Icon = item.icon
 
-          <div
-            style={{
-              ...styles.statVal,
-              color: s.color,
-            }}
-          >
-            {s.value}
-          </div>
-        </div>
-      ))}
+        return (
+          <motion.div
+                key={item.key}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: index * 0.1,
+                }}
+                whileHover={{
+                  y: -6,
+                }}
+                className="
+                  bg-white
+                  rounded-3xl
+                  border border-gray-100
+                  p-6
+                  shadow-sm
+                  hover:shadow-xl
+                  transition-all duration-300
+                "
+              >
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 ${item.color}`}>
+              <Icon size={20} className="text-white" />
+            </div>
+
+            <p className="text-gray-500 text-sm font-medium mb-1">
+              {item.label}
+            </p>
+
+            <h3 className="text-3xl font-bold text-gray-900">
+              {stats?.[item.key] || 0}
+            </h3>
+          </motion.div>
+        )
+      })}
     </div>
   )
 }
