@@ -21,6 +21,8 @@ export default function SertifikatPeserta() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [certificateNumber, setCertificateNumber] = useState('')
 
   useEffect(() => {
       fetchPeserta()
@@ -102,48 +104,66 @@ export default function SertifikatPeserta() {
   // Filter peserta yang sudah selesai dinilai
   const completedParticipants = peserta.filter(
     (p) =>
-      p.status === 'Selesai Dinilai' ||
-      p.status === 'Sertifikat Diunggah'
+      p.status === 'selesai_dinilai' ||
+      p.status === 'sudah_sertifikat'
   )
 
   const filtered = completedParticipants.filter(
     (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.institution.toLowerCase().includes(search.toLowerCase())
+      p.nama_lengkap.toLowerCase().includes(search.toLowerCase()) ||
+      p.asal_institusi.toLowerCase().includes(search.toLowerCase())
   )
 
-  const handleSimulateUpload = (id) => {
-    setUploadingId(id)
-    setUploadProgress(0)
+  const handleUploadCertificate = async (id) => {
+    if (!selectedFile) {
+        alert('Pilih file PDF terlebih dahulu')
+        return
+    }
 
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
+    if (!certificateNumber) {
+        alert('Nomor sertifikat wajib diisi')
+        return
+    }
 
-          setTimeout(() => {
-            const student = peserta.find(
-              (p) => p.id === id
-            )
+    try {
+        setUploadingId(id)
 
-            onUploadCertificate(id, {
-              fileName: `Sertifikat_Magang_${
-                student
-                  ? student.name.replace(/\s+/g, '_')
-                  : 'Peserta'
-              }.pdf`,
-              fileSize: '245 KB',
-            })
+        const formData = new FormData()
 
-            setUploadingId(null)
-          }, 400)
+        formData.append('file_pdf', selectedFile)
+        formData.append(
+        'no_sertifikat',
+        certificateNumber
+        )
 
-          return 100
+        await api.post(
+        `/pembimbing/sertifikat/${id}`,
+        formData,
+        {
+            headers: {
+            'Content-Type':
+                'multipart/form-data',
+            },
         }
+        )
 
-        return prev + 20
-      })
-    }, 120)
+        await fetchPeserta()
+
+        setSelectedFile(null)
+        setCertificateNumber('')
+        setUploadingId(null)
+
+        alert('Sertifikat berhasil diupload')
+    } catch (error) {
+        console.error(error)
+
+        alert(
+        error.response?.data?.message ||
+            'Gagal upload sertifikat'
+        )
+
+        setUploadingId(null)
+    }
   }
 
   return (
@@ -233,7 +253,7 @@ export default function SertifikatPeserta() {
                     <h2 className="text-3xl font-bold mt-2 text-emerald-600">
                     {
                         completedParticipants.filter(
-                        p => p.status === 'Sertifikat Diunggah'
+                        p => p.status === 'sudah_sertifikat'
                         ).length
                     }
                     </h2>
@@ -258,7 +278,7 @@ export default function SertifikatPeserta() {
                     <h2 className="text-3xl font-bold mt-2 text-amber-500">
                     {
                         completedParticipants.filter(
-                        p => p.status !== 'Sertifikat Diunggah'
+                        p => p.status !== 'sudah_sertifikat'
                         ).length
                     }
                     </h2>
@@ -412,7 +432,7 @@ export default function SertifikatPeserta() {
                         <td className="px-6 py-4">
                             <div>
                             <p className="text-sm font-bold text-gray-800">
-                                {item.name}
+                                {item.nama_lengkap}
                             </p>
 
                             <p
@@ -425,7 +445,7 @@ export default function SertifikatPeserta() {
                                 tracking-tight
                                 "
                             >
-                                {item.studyProgram}
+                                {item.program_studi}
                             </p>
                             </div>
                         </td>
@@ -438,14 +458,14 @@ export default function SertifikatPeserta() {
                                 tracking-tight
                             "
                             >
-                            {item.institution}
+                            {item.asal_instansi}
                             </span>
                         </td>
 
                         <td className="px-6 py-4 text-center">
                             <div className="inline-flex items-center gap-1.5">
                             <span className="text-sm font-extrabold text-blue-900">
-                                {item.grade?.avg}
+                                {item.penilaian.nilai_total}
                             </span>
 
                             <span
@@ -459,11 +479,11 @@ export default function SertifikatPeserta() {
                                 "
                                 
                             >
-                                {item.grade?.avg >= 90
+                                {item.penilaian.nilai_total >= 90
                                     ? 'A'
-                                    : item.grade?.avg >= 80
+                                    : item.penilaian.nilai_total >= 80
                                     ? 'B'
-                                    : item.grade?.avg >= 70
+                                    : item.penilaian.nilai_total >= 70
                                     ? 'C'
                                     : 'D'
                                 }
@@ -473,7 +493,7 @@ export default function SertifikatPeserta() {
 
                         <td className="px-6 py-4">
                             {item.status ===
-                            'Sertifikat Diunggah' ? (
+                            'sudah_sertifikat' ? (
                             <div className="flex items-center gap-2 text-emerald-600">
                                 <Check
                                 size={14}
@@ -501,7 +521,7 @@ export default function SertifikatPeserta() {
                                     "
                                 >
                                     {
-                                    item.certificate
+                                    item.sertifikat
                                         ?.fileName
                                     }
                                 </span>
@@ -562,7 +582,7 @@ export default function SertifikatPeserta() {
                                 </div>
                             </div>
                             ) : item.status ===
-                            'Sertifikat Diunggah' ? (
+                            'sudah_sertifikat' ? (
                             <div className="flex items-center justify-center gap-1.5">
                                 <span
                                 className="
@@ -576,15 +596,16 @@ export default function SertifikatPeserta() {
                                 "
                                 >
                                 {
-                                    item.certificate
+                                    item.sertifikat
                                     ?.fileSize
                                 }
                                 </span>
 
                                 <button
                                 onClick={() =>
-                                    alert(
-                                    `Mengunduh file: ${item.certificate?.fileName}`
+                                    window.open(
+                                    item.sertifikat?.file_pdf,
+                                    '_blank'
                                     )
                                 }
                                 className="
@@ -620,33 +641,54 @@ export default function SertifikatPeserta() {
                                 </button>
                             </div>
                             ) : (
-                            <button
-                                onClick={() =>
-                                handleSimulateUpload(
-                                    item.id
-                                )
+                            <div className="flex flex-col gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="No Sertifikat"
+                                    className="border rounded p-2 text-xs"
+                                    onChange={(e) =>
+                                    setCertificateNumber(
+                                        e.target.value
+                                    )
+                                    }
+                                />
+
+                                <input
+                                type="file"
+                                id={`upload-${item.id}`}
+                                accept="application/pdf"
+                                className="hidden"
+                                onChange={(e) =>
+                                    setSelectedFile(e.target.files[0])
                                 }
-                                className="
-                                group
-                                px-4 py-2
-                                rounded-xl
-                                bg-gradient-to-r
-                                from-blue-600
-                                to-indigo-600
-                                text-white
-                                font-semibold
-                                shadow-lg
-                                shadow-blue-200
-                                hover:scale-105
-                                transition-all
-                                inline-flex
-                                items-center
-                                gap-2
-                                "
-                            >
-                                <Upload size={12} />
-                                Pilih & Unggah
-                            </button>
+                                />
+
+                                <label
+                                    htmlFor={`upload-${item.id}`}
+                                    className="cursor-pointer px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-sm font-medium text-center"
+                                >
+                                    {selectedFile
+                                    ? selectedFile.name
+                                    : 'Pilih PDF'}
+                                </label>
+
+                                <button
+                                    onClick={() =>
+                                    handleUploadCertificate(
+                                        item.id
+                                    )
+                                    }
+                                    className="
+                                    px-4 py-2
+                                    rounded-xl
+                                    bg-blue-600
+                                    text-white
+                                    text-xs
+                                    "
+                                >
+                                    Upload PDF
+                                </button>
+                            </div>
                             )}
                         </td>
                         </motion.tr>

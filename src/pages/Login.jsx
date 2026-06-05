@@ -174,6 +174,12 @@ export default function Login() {
 
             {/* Content Section */}
             <div className="p-8">
+              <Link
+              to="/home"
+              className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              ← Kembali 
+            </Link>
 
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-[#1E3A5F]">

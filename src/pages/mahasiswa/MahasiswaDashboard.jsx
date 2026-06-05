@@ -58,6 +58,9 @@ export default function MahasiswaDashboard() {
   : pendaftaran.status ===
     'selesai_dinilai'
   ? 'Selesai Dinilai'
+  : pendaftaran.status ===
+    'sudah_sertifikat'
+  ? 'Selesai Magang'
   : 'Ditolak'
 
   const currentStep = (() => {
@@ -75,6 +78,9 @@ export default function MahasiswaDashboard() {
 
       case 'selesai_dinilai':
         return 5
+
+      case 'sudah_sertifikat':
+        return 6
 
       case 'ditolak':
         return 1
@@ -104,6 +110,10 @@ export default function MahasiswaDashboard() {
     {
       id: 5,
       label: 'Selesai dinilai',
+    },
+    {
+      id: 6,
+      label: 'Sertifikat',
     },
   ]
 
@@ -286,7 +296,7 @@ export default function MahasiswaDashboard() {
               text-sm
               font-semibold
             ">
-              Step {currentStep} / 5
+              Step {currentStep} / 6
             </div>
           </div>
 
@@ -301,7 +311,7 @@ export default function MahasiswaDashboard() {
                 transition-all duration-500
               "
               style={{
-                width: `${((currentStep - 1) / 4) * 100}%`,
+                width: `${((currentStep - 1) / 5) * 100}%`,
               }}
             />
 
@@ -315,7 +325,7 @@ export default function MahasiswaDashboard() {
 
             <div className="
               relative
-              grid grid-cols-2 md:grid-cols-5
+              grid grid-cols-2 md:grid-cols-6
               gap-8
             ">
               {steps.map((step, index) => (
@@ -378,19 +388,43 @@ export default function MahasiswaDashboard() {
               📝
             </span>
 
-            <p className="text-sm text-blue-700 font-medium">
-              {!pendaftaran
-                ? 'Kamu belum melakukan pendaftaran magang.'
-                : pendaftaran.status === 'menunggu_persetujuan'
-                ? 'Pendaftaran sedang menunggu persetujuan admin.'
-                : pendaftaran.status === 'disetujui'
-                ? 'Pendaftaran magang telah disetujui.'
-                : pendaftaran.status === 'aktif'
-                ? 'Magang sedang berlangsung.'
-                : pendaftaran.status === 'selesai_dinilai'
-                ? 'Magang selesai dan sudah dinilai.'
-                : 'Status tidak diketahui.'}
-            </p>
+            <div className="text-sm text-blue-700 font-medium">
+              {!pendaftaran ? (
+                <p>Kamu belum melakukan pendaftaran magang.</p>
+              ) : pendaftaran.status === 'menunggu_persetujuan' ? (
+                <p>Pendaftaran sedang menunggu persetujuan admin.</p>
+              ) : pendaftaran.status === 'disetujui' ? (
+                <p>Pendaftaran magang telah disetujui.</p>
+              ) : pendaftaran.status === 'ditolak' ? (
+                <>
+                  <p>Pendaftaran magang ditolak.</p>
+
+                  {pendaftaran.alasan_tolak && (
+                    <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="font-semibold text-red-700">
+                        Alasan Penolakan:
+                      </p>
+                      <p className="text-red-600">
+                        {pendaftaran.alasan_tolak}
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : pendaftaran.status === 'aktif' ? (
+                <p>Magang sedang berlangsung.</p>
+              ) : pendaftaran.status === 'selesai_dinilai' ? (
+                <p>
+                  Sudah dinilai dan menunggu pembimbing mengupload
+                  sertifikat magang.
+                </p>
+              ) : pendaftaran.status === 'sudah_sertifikat' ? (
+                <p>
+                  Magang selesai dan sertifikat magang sudah terbit.
+                </p>
+              ) : (
+                <p>Status tidak diketahui.</p>
+              )}
+            </div>
           </motion.div>
         </motion.div>
 

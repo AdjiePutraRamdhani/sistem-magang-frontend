@@ -29,7 +29,7 @@ const statsConfig = [
     color: 'bg-emerald-500',
   },
   {
-    key: 'selesai_dinilai',
+    key: 'sudah_sertifikat',
     label: 'Selesai & Dinilai',
     icon: CheckSquare,
     color: 'bg-violet-600',

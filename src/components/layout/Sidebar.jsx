@@ -25,28 +25,28 @@ export default function Sidebar({ menuItems = [] }) {
   return (
     <aside className="w-72 bg-white border-r border-gray-100 flex flex-col fixed inset-y-0 z-50 shadow-sm shadow-black/5">
       {/* Logo */}
-      <div className="p-6 mb-2 bg-gradient-to-br rounded-b-lg
-            from-slate-900
-            via-blue-900
-            to-indigo-900 text-white">
-        <div className="flex items-center gap-3">
-          <img
-            src={logoRiau}
-            alt="Logo Dispursip"
-            className="w-12 h-12 object-contain"
-          />
+      <div className="border-b border-gray-200 shadow-sm shadow-black/5">
+        <div className="p-6 mb-2 bg-white rounded-b-lg">
+          <div className="flex items-center gap-3">
+            <img
+              src={logoRiau}
+              alt="Logo Dispursip"
+              className="w-12 h-12 object-contain"
+            />
 
-          <div>
-            <h2 className="text-sm font-bold text-white leading-tight">
-              Sistem Informasi Pendataan Magang
-            </h2>
+            <div>
+              <h2 className="text-sm font-bold text-gray-800 leading-tight">
+                Sistem Informasi Pendataan Magang
+              </h2>
 
-            <p className="text-xs text-blue-100 mt-0.5">
-              Dispursip Prov. Riau
-            </p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Dispursip Prov. Riau
+              </p>
+            </div>
           </div>
         </div>
       </div>
+      
 
       {/* Menu */}
       <nav className="flex-1 px-3 space-y-1">
@@ -91,7 +91,7 @@ export default function Sidebar({ menuItems = [] }) {
       </nav>
 
       {/* Logout */}
-      <div className="p-4 mt-auto border-t border-gray-100">
+      <div className="p-4 mt-auto border-t border-gray-200">
         <button
           onClick={handleLogout}
           className="w-full text-left text-sm text-gray-500 hover:text-red-600 flex items-center gap-2 p-2 px-4 transition-colors"
