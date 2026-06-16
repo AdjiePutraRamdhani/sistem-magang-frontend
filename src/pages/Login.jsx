@@ -3,6 +3,7 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import PageTitle from '../components/common/PageTitle'
 import bgLogin from '@/assets/bg-login.jpeg'
 import logoRiau from '@/assets/logo-riau.png'
 import api from '../api/axios'
@@ -84,7 +85,9 @@ export default function Login() {
   }
  
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <>
+      <PageTitle title="Login" />
+        <div className="relative min-h-screen overflow-hidden">
 
       {/* Background */}
       <img
@@ -297,5 +300,6 @@ export default function Login() {
         </div>      
       </div>      
     </div>
+    </>
   )
 }

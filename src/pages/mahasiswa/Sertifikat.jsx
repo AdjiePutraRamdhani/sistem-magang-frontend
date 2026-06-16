@@ -13,6 +13,7 @@ import {
 import api from '@/api/axios'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { MAHASISWA_MENU } from '@/constants/mahasiswaMenu'
+import PageTitle from '../../components/common/PageTitle'
 
 export default function Sertifikat() {
   const [loading, setLoading] = useState(true)
@@ -68,7 +69,9 @@ export default function Sertifikat() {
   }
 
   return (
-    <DashboardLayout menuItems={MAHASISWA_MENU}>
+    <>
+      <PageTitle title="Dashboard Mahasiswa" />
+        <DashboardLayout menuItems={MAHASISWA_MENU}>
       {!data?.tersedia ? (
         <motion.div
           initial={{ opacity: 0, y: 25 }}
@@ -221,6 +224,7 @@ export default function Sertifikat() {
         </motion.div>
       )}
     </DashboardLayout>
+    </>
   )
 }
 

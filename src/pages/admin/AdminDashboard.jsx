@@ -7,6 +7,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import DashboardTable from '@/components/dashboard/DashboardTable'
 import StatsGrid from '@/components/dashboard/StatsGrid'
 import EmptyDashboard from '@/components/dashboard/EmptyDashboard'
+import PageTitle from '../../components/common/PageTitle'
 
 import Loading from '@/components/common/Loading'
 import ErrorState from '@/components/common/ErrorState'
@@ -41,7 +42,9 @@ export default function AdminDashboard() {
   }
 
   return (
-    <DashboardLayout menuItems={ADMIN_MENU}>
+    <>
+      <PageTitle title="Dashboard Admin" />
+        <DashboardLayout menuItems={ADMIN_MENU}>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -129,5 +132,6 @@ export default function AdminDashboard() {
         </Card>
       </motion.div>
     </DashboardLayout>
+    </>
   )
 }

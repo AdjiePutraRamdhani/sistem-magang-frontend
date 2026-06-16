@@ -6,6 +6,7 @@ import useDashboard from '../../hooks/useDashboard'
 import Loading from '../../components/common/Loading'
 import DashboardTable from '../../components/dashboard/DashboardTable'
 import PageHeader from '../../components/common/PageHeader'
+import PageTitle from '../../components/common/PageTitle'
 import Card from '../../components/ui/Card'
 import api from '../../api/axios'
 
@@ -56,7 +57,9 @@ export default function KelolaData() {
       }
   
   return (
-    <DashboardLayout menuItems={ADMIN_MENU}>
+    <>
+      <PageTitle title="Dashboard Admin" />
+        <DashboardLayout menuItems={ADMIN_MENU}>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -136,5 +139,6 @@ export default function KelolaData() {
           </Card>
         </motion.div>
     </DashboardLayout>
+    </>
   )
 }

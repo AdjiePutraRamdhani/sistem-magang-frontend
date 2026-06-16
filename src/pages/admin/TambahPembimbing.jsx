@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
 import PageHeader from '@/components/common/PageHeader'
+import PageTitle from '../../components/common/PageTitle'
 
 import Card from '@/components/ui/Card'
 
@@ -65,7 +66,9 @@ export default function TambahPembimbing() {
   }
 
   return (
-    <DashboardLayout menuItems={ADMIN_MENU}>
+    <>
+      <PageTitle title="Dashboard Admin" />
+        <DashboardLayout menuItems={ADMIN_MENU}>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -156,5 +159,6 @@ export default function TambahPembimbing() {
         </Card>
       </motion.div>
     </DashboardLayout>
+      </>
   )
 }

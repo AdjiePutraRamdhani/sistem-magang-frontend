@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Eye, EyeOff, Loader2  } from 'lucide-react'
 import logoRiau from '@/assets/logo-riau.png'
 import bgLogin from '@/assets/bg-login.jpeg'
+import PageTitle from '../components/common/PageTitle'
 
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
@@ -122,7 +123,9 @@ export default function Register() {
   ) : null
  
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <>
+      <PageTitle title="Daftar" />
+        <div className="relative min-h-screen overflow-hidden">
 
       {/* Background */}
       <img
@@ -504,5 +507,6 @@ export default function Register() {
         </div>
       </div>      
     </div>
+    </>
   )
 }

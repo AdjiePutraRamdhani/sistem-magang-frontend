@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from 'react'
 
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import PageTitle from '../../components/common/PageTitle'
 import { PEMBIMBING_MENU } from '@/constants/pembimbingMenu'
 import api from '@/api/axios'
 import { useNavigate } from 'react-router-dom'
@@ -122,7 +123,9 @@ export default function PembimbingDashboard() {
   }
 
   return (
-    <DashboardLayout
+    <>
+      <PageTitle title="Dashboard Pembimbing" />
+        <DashboardLayout
       menuItems={PEMBIMBING_MENU}
       title="Dashboard Pembimbing"
     >
@@ -476,5 +479,6 @@ export default function PembimbingDashboard() {
 
       </div>
     </DashboardLayout>
+    </>
   )
 }

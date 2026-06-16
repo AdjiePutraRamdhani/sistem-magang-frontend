@@ -11,6 +11,7 @@ import api from '@/api/axios'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { MAHASISWA_MENU } from '@/constants/mahasiswaMenu'
 import InputField from '../../components/form/InputField'
+import PageTitle from '../../components/common/PageTitle'
 
 export default function DaftarMagang() {
   const [showForm, setShowForm] = useState(false)
@@ -84,7 +85,9 @@ export default function DaftarMagang() {
   }
 
   return (
-    <DashboardLayout menuItems={MAHASISWA_MENU}>
+    <>
+      <PageTitle title="Dashboard Mahasiswa" />
+        <DashboardLayout menuItems={MAHASISWA_MENU}>
       <AnimatePresence mode="wait">
         {!showForm ? (
           <motion.div
@@ -431,5 +434,6 @@ export default function DaftarMagang() {
         )}
       </AnimatePresence>
     </DashboardLayout>
+    </>
   )
 }

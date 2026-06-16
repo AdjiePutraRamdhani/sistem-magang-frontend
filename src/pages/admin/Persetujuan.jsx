@@ -6,6 +6,7 @@ import api from '@/api/axios'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import useDashboard from '../../hooks/useDashboard'
 import Loading from '@/components/common/Loading'
+import PageTitle from '../../components/common/PageTitle'
 import DashboardTable from '../../components/dashboard/DashboardTable'
 import PageHeader from '../../components/common/PageHeader'
 import Card from '../../components/ui/Card'
@@ -122,7 +123,9 @@ export default function AdminPersetujuan() {
   }
 
   return (
-    <DashboardLayout menuItems={ADMIN_MENU}>
+    <>
+      <PageTitle title="Dashboard Admin" />
+      <DashboardLayout menuItems={ADMIN_MENU}>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -396,5 +399,6 @@ export default function AdminPersetujuan() {
       </AnimatePresence>
         
     </DashboardLayout>
+    </>
   )
 }

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import PageTitle from '../../components/common/PageTitle'
 import { PEMBIMBING_MENU } from '@/constants/pembimbingMenu'
 
 
@@ -167,7 +168,9 @@ export default function SertifikatPeserta() {
   }
 
   return (
-    <DashboardLayout
+    <>
+      <PageTitle title="Dashboard Pembimbing" />
+        <DashboardLayout
       menuItems={PEMBIMBING_MENU}
       title="Sertifikat Peserta"
     >
@@ -700,6 +703,6 @@ export default function SertifikatPeserta() {
             </div>
         </motion.div>
     </DashboardLayout>
-    
+    </>    
   )
 }

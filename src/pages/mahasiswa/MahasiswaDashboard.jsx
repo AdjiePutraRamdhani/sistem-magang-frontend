@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { formatTanggal } from '@/utils/formatTanggal'
+import PageTitle from '@/components/common/PageTitle'
 
 import api from '@/api/axios'
 import {
@@ -215,7 +216,10 @@ export default function MahasiswaDashboard() {
   }
 
   return (
-    <DashboardLayout menuItems={MAHASISWA_MENU}>
+    <>
+      <PageTitle title="Dashboard Mahasiswa" />
+
+      <DashboardLayout menuItems={MAHASISWA_MENU}>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -558,5 +562,6 @@ export default function MahasiswaDashboard() {
         </div>
       </motion.div>
     </DashboardLayout>
+    </>
   )
 }
