@@ -19,6 +19,7 @@ export default function TambahPembimbing() {
     nama_lengkap: '',
     email: '',
     password: '',
+    no_telepon: '',
     nip: '',
     jabatan: '',
     bidang: '',
@@ -49,6 +50,7 @@ export default function TambahPembimbing() {
         nama_lengkap: '',
         email: '',
         password: '',
+        no_telepon: '',
         nip: '',
         jabatan: '',
         bidang: '',
@@ -107,6 +109,15 @@ export default function TambahPembimbing() {
               onChange={handleChange}
               error={errors.password?.[0]}
               placeholder="Password"
+            />
+
+            <InputField
+              label="Nomor Telepon"
+              name="no_telepon"
+              value={form.no_telepon}
+              onChange={handleChange}
+              error={errors.no_telepon?.[0]}
+              placeholder="08xxxxxxxxxx"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

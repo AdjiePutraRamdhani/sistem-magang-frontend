@@ -2,11 +2,14 @@ import { motion } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { formatTanggal } from '@/utils/formatTanggal'
+
 import api from '@/api/axios'
 import {
   ClipboardList,
   Users,
   LayoutDashboard,
+  UserRound,
   ArrowRight,
   Loader2,
 } from 'lucide-react'
@@ -15,7 +18,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { MAHASISWA_MENU } from '@/constants/mahasiswaMenu'
 
 export default function MahasiswaDashboard() {
-  const [pendaftaran, setPendaftaran] = useState(null)
+  const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
@@ -32,8 +35,8 @@ export default function MahasiswaDashboard() {
         '/mahasiswa/dashboard'
       )
 
-      setPendaftaran(
-        res.data.pendaftaran
+      setData(
+        res.data
       )
     } catch (err) {
       console.error(err)
@@ -43,30 +46,32 @@ export default function MahasiswaDashboard() {
     }
   }
 
-  console.log(pendaftaran)
-  console.log(pendaftaran?.status)
+  console.log(data)
+  console.log(data?.pendaftaran.tanggal_mulai)
+  console.log(data?.mahasiswa.nama_lengkap)
 
-  const statusText = !pendaftaran
+
+  const statusText = !data?.pendaftaran
   ? 'Belum Terdaftar'
-  : pendaftaran.status ===
+  : data?.pendaftaran.status ===
     'menunggu_persetujuan'
   ? 'Menunggu Persetujuan'
-  : pendaftaran.status === 'disetujui'
+  : data?.pendaftaran.status === 'disetujui'
   ? 'Disetujui'
-  : pendaftaran.status === 'aktif'
+  : data?.pendaftaran.status === 'aktif'
   ? 'Magang Aktif'
-  : pendaftaran.status ===
+  : data?.pendaftaran.status ===
     'selesai_dinilai'
   ? 'Selesai Dinilai'
-  : pendaftaran.status ===
+  : data?.pendaftaran.status ===
     'sudah_sertifikat'
   ? 'Selesai Magang'
   : 'Ditolak'
 
   const currentStep = (() => {
-    if (!pendaftaran) return 1
+    if (!data?.pendaftaran) return 1
 
-    switch (pendaftaran.status) {
+    switch (data?.pendaftaran.status) {
       case 'menunggu_persetujuan':
         return 2
 
@@ -121,21 +126,40 @@ export default function MahasiswaDashboard() {
     {
       title: 'Status Pendaftaran',
       value: statusText,
+      tanggal_mulai:
+        data?.pendaftaran.tanggal_mulai,
+      tanggal_selesai:
+        data?.pendaftaran.tanggal_selesai,
       icon: ClipboardList,
       color: 'bg-blue-600',
     },
     {
       title: 'Pembimbing',
       value:
-        pendaftaran?.pembimbing ||
+        data?.pendaftaran?.pembimbing.nama_lengkap ||
         'Belum Ditentukan',
+      jabatan:
+        data?.pendaftaran?.pembimbing.jabatan,
+      bidang:
+        data?.pendaftaran?.pembimbing.bidang,
+      phone:
+        data?.pendaftaran?.pembimbing.no_telepon,
       icon: Users,
       color: 'bg-emerald-600',
     },
     {
-      title: 'Total Absensi',
-      value: '0 Hari',
-      icon: LayoutDashboard,
+      title: 'Personal Info',
+      value:
+        data?.mahasiswa.nama_lengkap,
+      email:
+        data?.mahasiswa.email,
+      nim_nisn:
+        data?.mahasiswa.nim_nisn,
+      program_studi:
+        data?.mahasiswa.program_studi,
+      asal_instansi:
+        data?.mahasiswa.asal_instansi,
+      icon: UserRound,
       color: 'bg-violet-600',
     },
   ]
@@ -238,7 +262,7 @@ export default function MahasiswaDashboard() {
               pendaftaran hingga sertifikat selesai.
             </motion.p>
 
-            {!loading && !pendaftaran && (
+            {!loading && !data?.pendaftaran && (
               <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
@@ -389,35 +413,35 @@ export default function MahasiswaDashboard() {
             </span>
 
             <div className="text-sm text-blue-700 font-medium">
-              {!pendaftaran ? (
+              {!data?.pendaftaran ? (
                 <p>Kamu belum melakukan pendaftaran magang.</p>
-              ) : pendaftaran.status === 'menunggu_persetujuan' ? (
+              ) : data?.pendaftaran.status === 'menunggu_persetujuan' ? (
                 <p>Pendaftaran sedang menunggu persetujuan admin.</p>
-              ) : pendaftaran.status === 'disetujui' ? (
+              ) : data?.pendaftaran.status === 'disetujui' ? (
                 <p>Pendaftaran magang telah disetujui.</p>
-              ) : pendaftaran.status === 'ditolak' ? (
+              ) : data?.pendaftaran.status === 'ditolak' ? (
                 <>
                   <p>Pendaftaran magang ditolak.</p>
 
-                  {pendaftaran.alasan_tolak && (
+                  {data?.pendaftaran.alasan_tolak && (
                     <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                       <p className="font-semibold text-red-700">
                         Alasan Penolakan:
                       </p>
                       <p className="text-red-600">
-                        {pendaftaran.alasan_tolak}
+                        {data?.pendaftaran.alasan_tolak}
                       </p>
                     </div>
                   )}
                 </>
-              ) : pendaftaran.status === 'aktif' ? (
+              ) : data?.pendaftaran.status === 'aktif' ? (
                 <p>Magang sedang berlangsung.</p>
-              ) : pendaftaran.status === 'selesai_dinilai' ? (
+              ) : data?.pendaftaran.status === 'selesai_dinilai' ? (
                 <p>
                   Sudah dinilai dan menunggu pembimbing mengupload
                   sertifikat magang.
                 </p>
-              ) : pendaftaran.status === 'sudah_sertifikat' ? (
+              ) : data?.pendaftaran.status === 'sudah_sertifikat' ? (
                 <p>
                   Magang selesai dan sertifikat magang sudah terbit.
                 </p>
@@ -474,6 +498,60 @@ export default function MahasiswaDashboard() {
                 <h3 className="mt-1 text-xl font-bold text-gray-900">
                   {item.value}
                 </h3>
+
+                {item.jabatan && (
+                  <p className="text-sm text-gray-600 mt-2">
+                    Jabatan: {item.jabatan}
+                  </p>
+                )}
+
+                {item.bidang && (
+                  <p className="text-sm text-gray-500">
+                    Bidang: {item.bidang}
+                  </p>
+                )}
+
+                {item.phone && (
+                  <p className="text-sm text-blue-600 mt-2">
+                    📞 {item.phone}
+                  </p>
+                )}
+
+                {item.email && (
+                  <p className="text-sm text-gray-600 mt-2">
+                    {item.email}
+                  </p>
+                )}
+
+                {item.nim_nisn && (
+                  <p className="text-sm text-gray-500">
+                    NIM: {item.nim_nisn}
+                  </p>
+                )}
+
+                {item.program_studi && (
+                  <p className="text-sm text-gray-500">
+                    Jurusan: {item.program_studi}
+                  </p>
+                )}
+
+                {item.asal_instansi && (
+                  <p className="text-sm text-gray-500">
+                    Asal Instansi: {item.asal_instansi}
+                  </p>
+                )}
+
+                {item.tanggal_mulai && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Mulai: {formatTanggal(item.tanggal_mulai)}
+                  </p>
+                )}
+
+                {item.tanggal_selesai && (
+                  <p className="text-sm text-gray-500">
+                    Selesai: {formatTanggal(item.tanggal_selesai)}
+                  </p>
+                )}
               </motion.div>
             )
           })}
