@@ -48,7 +48,7 @@ export default function MahasiswaDashboard() {
   }
 
   console.log(data)
-  console.log(data?.pendaftaran.tanggal_mulai)
+  
   console.log(data?.mahasiswa.nama_lengkap)
 
 
@@ -128,9 +128,11 @@ export default function MahasiswaDashboard() {
       title: 'Status Pendaftaran',
       value: statusText,
       tanggal_mulai:
-        data?.pendaftaran.tanggal_mulai,
+        data?.pendaftaran?.tanggal_mulai ||
+        '',
       tanggal_selesai:
-        data?.pendaftaran.tanggal_selesai,
+        data?.pendaftaran?.tanggal_selesai ||
+        '',
       icon: ClipboardList,
       color: 'bg-blue-600',
     },
