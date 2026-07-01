@@ -1,4 +1,4 @@
-import { Eye, Check, X, } from 'lucide-react'
+import { Eye, Check, X, Trash2 } from 'lucide-react'
 import { formatTanggal } from '@/utils/formatTanggal'
 import StatusBadge from '@/components/common/StatusBadge'
 import { Link } from 'react-router-dom'
@@ -8,6 +8,7 @@ export default function DashboardTable({
   onView,
   onApprove,
   onReject,
+  onDelete,
   showActions = true,
 }) {
   return (
@@ -88,39 +89,62 @@ export default function DashboardTable({
               {/* Aksi */}
               {showActions && (
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onView(item.file_surat_url)}
-                      className="
-                        p-2 rounded-lg
-                        bg-blue-50 text-blue-600
-                        hover:bg-blue-100
-                      "
-                    >
-                      <Eye size={18} />
-                    </button>
+                  <div className="flex items-center gap-2 justify-end">
+                    {onView && (
+                      <button
+                        onClick={() => onView(item.file_surat_url)}
+                        className="
+                          p-2 rounded-lg
+                          bg-blue-50 text-blue-600
+                          hover:bg-blue-100
+                        "
+                        title="Lihat Surat"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    )}
 
-                    <button
-                      onClick={() => onApprove(item.id)}
-                      className="
-                        p-2 rounded-lg
-                        bg-green-50 text-green-600
-                        hover:bg-green-100
-                      "
-                    >
-                      <Check size={18} />
-                    </button>
+                    {onApprove && (
+                      <button
+                        onClick={() => onApprove(item.id)}
+                        className="
+                          p-2 rounded-lg
+                          bg-green-50 text-green-600
+                          hover:bg-green-100
+                        "
+                        title="Setujui"
+                      >
+                        <Check size={18} />
+                      </button>
+                    )}
 
-                    <button
-                      onClick={() => onReject(item.id)}
-                      className="
-                        p-2 rounded-lg
-                        bg-red-50 text-red-600
-                        hover:bg-red-100
-                      "
-                    >
-                      <X size={18} />
-                    </button>
+                    {onReject && (
+                      <button
+                        onClick={() => onReject(item.id)}
+                        className="
+                          p-2 rounded-lg
+                          bg-red-50 text-red-600
+                          hover:bg-red-100
+                        "
+                        title="Tolak"
+                      >
+                        <X size={18} />
+                      </button>
+                    )}
+
+                    {onDelete && (
+                      <button
+                        onClick={() => onDelete(item.id)}
+                        className="
+                          p-2 rounded-lg
+                          bg-red-50 text-red-600
+                          hover:bg-red-100
+                        "
+                        title="Hapus Peserta"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </td>
               )}

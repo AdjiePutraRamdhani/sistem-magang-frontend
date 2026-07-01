@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Award, Users, ArrowRight, MapPin, Phone, Mail, FileText, 
-  CheckCircle2, UserPlus, ChevronRight, BookOpen, GraduationCap, Building2, ShieldCheck
+  CheckCircle2, UserPlus, ChevronRight, BookOpen, GraduationCap, Building2, ShieldCheck, Search
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Login from './Login';
@@ -24,17 +24,66 @@ export default function LandingPageView({
     sertifikat_terbit: 0,
     })
 
+    const [peserta, setPeserta] = useState([])
+    const [searchQuery, setSearchQuery] = useState('')
+    const [loadingPeserta, setLoadingPeserta] = useState(false)
+
     useEffect(() => {
-    loadOverview()
+      loadOverview()
+      loadPeserta()
     }, [])
 
     const loadOverview = async () => {
-    try {
+      try {
         const res = await api.get('/landing/overview')
         setOverview(res.data)
-    } catch (error) {
+      } catch (error) {
         console.error(error)
+      }
     }
+
+    const loadPeserta = async (search = '') => {
+      setLoadingPeserta(true)
+      try {
+        const res = await api.get('/landing/peserta', {
+          params: { search }
+        })
+        setPeserta(res.data)
+      } catch (error) {
+        console.error(error)
+      } finally {
+        setLoadingPeserta(false)
+      }
+    }
+
+    const handleSearch = (e) => {
+      const val = e.target.value
+      setSearchQuery(val)
+      loadPeserta(val)
+    }
+
+    const formatDate = (dateString) => {
+      if (!dateString) return '-'
+      const date = new Date(dateString)
+      return date.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      })
+    }
+
+    const getStatusBadge = (status) => {
+      switch (status) {
+        case 'aktif':
+          return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700">Aktif</span>
+        case 'disetujui':
+          return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-700">Disetujui</span>
+        case 'selesai_dinilai':
+        case 'sudah_sertifikat':
+          return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-purple-100 text-purple-700">Alumni</span>
+        default:
+          return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-700 uppercase">{status}</span>
+      }
     }
 
     const fadeUp = {
@@ -318,6 +367,91 @@ export default function LandingPageView({
               <p className="text-purple-600 text-3xl font-black">100%</p>
               <p className="text-xs font-bold text-gray-500 uppercase mt-1 tracking-wide">Digital Transparan</p>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Peserta Magang Section */}
+      <section className="bg-gray-50 py-16 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-10">
+            <span className="text-[#1A73E8] font-black text-[11px] tracking-widest uppercase bg-blue-50 px-3 py-1 rounded-full">Daftar Peserta</span>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-[#1E3A5F] mt-4 tracking-tight">Peserta Magang Aktif & Alumni</h3>
+            <p className="text-gray-500 text-xs sm:text-sm mt-2 font-medium leading-relaxed">
+              Daftar siswa dan mahasiswa yang sedang atau telah menyelesaikan program magang resmi di DISPUSIP Provinsi Riau.
+            </p>
+          </div>
+
+          {/* Search Box */}
+          <div className="max-w-md mx-auto mb-8 relative">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Cari nama, instansi, atau program studi..."
+                value={searchQuery}
+                onChange={handleSearch}
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm text-sm"
+              />
+              <Search className="absolute left-3.5 top-3.5 text-gray-400 w-4 h-4" />
+            </div>
+          </div>
+
+          {/* Table / Grid */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {loadingPeserta ? (
+              <div className="p-12 text-center text-gray-500 font-medium">
+                Memuat data peserta...
+              </div>
+            ) : peserta.length === 0 ? (
+              <div className="p-12 text-center text-gray-500 font-medium">
+                Tidak ada data peserta ditemukan.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50/75 border-b border-gray-100">
+                      <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Peserta</th>
+                      <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Asal Instansi / Prodi</th>
+                      <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Periode Magang</th>
+                      <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Pembimbing</th>
+                      <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {peserta.map((p) => (
+                      <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#1A73E8] font-bold text-sm">
+                              {p.nama_lengkap ? p.nama_lengkap.charAt(0).toUpperCase() : '?'}
+                            </div>
+                            <span className="font-bold text-gray-800 text-sm">{p.nama_lengkap}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="font-semibold text-gray-700 text-sm">{p.asal_instansi}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{p.program_studi}</p>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600 font-medium">
+                          {formatDate(p.tanggal_mulai)} - {formatDate(p.tanggal_selesai)}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {p.pembimbing ? (
+                            <span className="font-medium text-gray-700">{p.pembimbing}</span>
+                          ) : (
+                            <span className="text-gray-400 italic text-xs">Belum ditunjuk</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {getStatusBadge(p.status)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </section>
